@@ -1,62 +1,78 @@
-import React, {Component} from 'react';
-import axios from 'axios';
-import Cards from './components/Cards';
-import './App.css';
+import React from "react";
+import axios from "axios";
+import "./App.css";
 
-var users=["sharon-mosher"]
-
-class App extends Component {
-  constructor(){
+class App extends React.Component {
+  constructor() {
+    console.log("Constructor");
     super();
-    this.state ={
-      people: []
+    this.state = {
+      users: [],
+      login: "",
     };
   }
 
-  componentDidMount(){
-    axios.get(`https://api.github.com/users/sharon-mosher/followers`)
-    .then(res =>{
-      res.data.map(u=>{
-        users=[...users.u.login]
+  componentDidMount() {
+    console.log("CDM running");
+    axios
+      .get(`http://api.github.com/users/sharon-mosher`)
+      .then((res) => {
+        this.setState({ users: res.data });
+        console.log(this.state);
       })
-      console.log(users)
-      users.map(p=>{
-        axios.get(`https://api.github.com/users/${p}`)
-        .then(res => {
-          var person = {
-            img:res.data.avatar_url,
-            name:res.data.name,
-            username:res.data.login,
-            followers:res.data.followers,
-            following:res.data.following,
-            id:res.data.id,
-            link:res.data.html_url
-          }
-          this.setState({
-            people: [...this.state.people, person]
-          })
-        })
-        .catch(err => {console.log(err)})
-      })
-    })
+      .catch((err) => console.log("Axios Err", err));
   }
-  render(){
-  return (
-    <div className = "App">
-      <header></header>
-      <body>
-        <div class ="header">
-          <h1>Github User Cards</h1>
-        </div>
-        <div className = "Information">
-          <h1>Github Followers</h1>
-        </div>
-        <div class = "cards">
-        <Cards people={this.state.people}/>
-        </div>
-      </body>
-    </div>
-  );
-};
-};
+  
+
+  componentDidUpdate(prevState) {
+    if (prevState.users !== this.state.users) {
+      console.log("User Has Changed");
+    }
+    if (prevState.login !== this.state.login) {
+      console.log("State Updated, user Followers", this.state.login);
+    }
+  }
+
+  fetchUsers = () => {
+    axios
+      .get(`https://api.github.com/users/${this.state.login}`)
+      .then((res) => {
+        this.setState({ users: res.data });
+        console.log(this.state);
+      })
+      .catch((err) => console.log(err));
+  };
+
+  handleChanges = (e) => {
+    console.log("handleChanges Called");
+    this.setState({
+      ...this.state,
+      login: e.target.value,
+    });
+  };
+
+  render() {
+    return (
+      <div>
+        <div>
+          <img className="userImg" src={this.state.users.avatar_url} alt="profile picture" />
+           <p>{this.state.users.name}  </p>
+           <div className="userCard">
+            <p>Bio: {this.state.users.bio}</p>
+            <p>Followers: {this.state.users.followers}</p>
+            <p>Following: {this.state.users.following}</p>
+            <a href={this.state.users.html_url}>
+              Visit Their Profile!
+            </a>
+          </div> 
+          <button onClick={this.fetchUsers}>Search Users</button>
+         <input
+          type="text"
+          value={this.state.login}
+          onChange={this.handleChanges}
+        /></div>
+      </div>
+    );
+  }
+}
 export default App;
